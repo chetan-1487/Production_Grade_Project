@@ -13,14 +13,14 @@ from sqlalchemy import func, and_
 
 load_dotenv()
 
-DOWNLOAD_LIMIT = int(os.getenv("DOWNLOAD_LIMIT_PER_DAY"))
+DOWNLOAD_LIMIT = int(os.getenv("DOWNLOAD_LIMIT_PER_DAY","100"))
 
 router=APIRouter(
     tags=['User Information']
 )
 
 @router.get("/history")
-def get_download_history(db: Session = Depends(get_db),current_user:int=Depends(auth2.get_current_user)):
+async def get_download_history(db: Session = Depends(get_db),current_user:int=Depends(auth2.get_current_user)):
     history = db.query(DownloadHistory).all()
 
     if not history:

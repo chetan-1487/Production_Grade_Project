@@ -4,7 +4,11 @@ from yt_dlp import YoutubeDL
 from datetime import datetime
 from typing import Dict, Tuple
 from app.Core.celery_worker.celery_worker import celery_app
+from celery import shared_task
+from dotenv import load_dotenv
+from fastapi import HTTPException
 
+load_dotenv()
 
 
 QUALITY_MAP = {
@@ -27,12 +31,15 @@ if not in list:
     raise RuntimeError(f"Invalid quality value: {quality}. Must be 360, 480, 720, 1080, etc.")
 '''
 
-@celery_app.task(name="app.Core.Service.download.download_video")
+# @celery_app.task(name="app.Core.Service.download.download_video")
+@shared_task
 def download_video(url: str, quality: str = '1080p', file_format: str = 'mp4') -> list:  #tuple
     # video_id = str(uuid.uuid4())
     extension = "mp3" if file_format == "mp3" else file_format
     output_path = os.path.join(BASE_DOWNLOAD_DIR, f"%(id)s.%(ext)s")
     result=[]
+    print("MAX_DURATION:", os.getenv("MAX_DURATION"))
+    print("MAX_SIZE:", os.getenv("MAX_SIZE"))
 
     if file_format == 'mp3':
         ydl_opts = {
@@ -66,13 +73,39 @@ def download_video(url: str, quality: str = '1080p', file_format: str = 'mp4') -
             'quiet': True,
             'playlistend': 5,
         }
-
     try:
         with YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=True)
+            check = ydl.extract_info(url, download=False)
+            if not check:
+                raise RuntimeError("Failed to extract video information.")
             
+
+            try:
+                max_duration = int(os.getenv("MAX_DURATION", "18000"))
+                max_size = int(os.getenv("MAX_SIZE", "3221225472"))
+            except ValueError:
+                raise RuntimeError("Environment variables MAX_DURATION or MAX_SIZE must be integers")
+            filesize = check.get("filesize") or 0
+            duration = check.get("duration") or 0
+
+            # Validate duration
+            if duration > max_duration:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Video duration exceeds 5 hours. (Got {duration // 3600}h {duration % 3600 // 60}m)"
+                )
+
+            # Validate file size
+            if filesize > max_size:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Video file size exceeds 3 GB. (Got {filesize / (1024**3):.2f} GB)"
+                )
+            
+            info = ydl.extract_info(url, download=True)
             if not info:
                 raise RuntimeError("Failed to extract video information.")
+
             entries=info.get("entries",[])
             if not entries:
                 entries=[info]

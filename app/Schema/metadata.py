@@ -13,12 +13,12 @@ YOUTUBE_PLAYLIST_REGEX = re.compile(r"^(https?://)?(www\.)?youtube\.com/playlist
 ALLOWED_FORMATS = {"mp4", "webm", "mp3"}
 
 class UserCreate(BaseModel):
-    email:str
+    email:EmailStr
     password:str
 
 class Userout(BaseModel):
     id:uuid
-    email:str
+    email:EmailStr
     created_at:datetime
 
     model_config = ConfigDict(from_attributes=True)
