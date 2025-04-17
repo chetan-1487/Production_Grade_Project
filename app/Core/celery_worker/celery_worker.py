@@ -1,18 +1,14 @@
 # Import Celery for task queue management
 from celery import Celery
-from dotenv import load_dotenv
-import os
-
-load_dotenv()
-
+from ...Core.config import BACKEND,BROKER
 
 # Initialize a Celery app with a custom name "worker"
 # BROKER is the message broker URL (e.g., Redis or RabbitMQ)
 # BACKEND is the result backend to store task results (e.g., Redis, RPC, database)
 celery_app = Celery(
     "worker",
-    broker=os.getenv("BROKER"),
-    backend=os.getenv("BACKEND")
+    broker=BROKER,
+    backend=BACKEND
 )
 
 

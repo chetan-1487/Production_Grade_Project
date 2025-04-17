@@ -7,13 +7,10 @@ from ..Schema.metadata import DownloadRequest
 from ..Core.Service.download import download_video
 from app.Database.models.model import VideoMetadata,DownloadHistory
 from datetime import datetime,timedelta
-from dotenv import load_dotenv
-import os
 from sqlalchemy import func, and_
+from ..Core.config import DOWNLOAD_LIMIT_PER_DAY
 
-load_dotenv()
-
-DOWNLOAD_LIMIT = int(os.getenv("DOWNLOAD_LIMIT_PER_DAY","100"))
+DOWNLOAD_LIMIT = DOWNLOAD_LIMIT_PER_DAY
 
 router=APIRouter(
     tags=['User Information']

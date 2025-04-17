@@ -1,12 +1,9 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-import os 
-from dotenv import load_dotenv
+from ..Core.config import Database_Connection
 
-load_dotenv()
-
-conn=os.getenv("Database_Connection")
+conn=Database_Connection
 
 if not conn:
     raise ValueError("Database connection string is missing. Please check your .env file.")
