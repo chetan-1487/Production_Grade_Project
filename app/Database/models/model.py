@@ -4,7 +4,7 @@ from datetime import datetime
 import uuid
 from sqlalchemy.dialects.postgresql import UUID
 
-
+# ---------------------- User Table ----------------------
 class User(Base):
     __tablename__="users"
     id=Column(UUID(as_uuid=True),primary_key=True,default=uuid.uuid4,nullable=False)
@@ -12,7 +12,7 @@ class User(Base):
     password=Column(String,nullable=False)
     created_at=Column(DateTime,default=datetime.now())
 
-
+# ---------------------- Video Metadata Table ----------------------
 class VideoMetadata(Base):
     __tablename__="video_metadata"
     id = Column(UUID(as_uuid=True), primary_key=True)
@@ -26,7 +26,7 @@ class VideoMetadata(Base):
     created_at=Column(DateTime,default=datetime.now())
     user_id=Column(UUID(as_uuid=True),ForeignKey("users.id",ondelete="CASCADE"),nullable=False)
 
-
+# ---------------------- Download History Table ----------------------
 class DownloadHistory(Base):
     __tablename__="download_history"
     id=Column(Integer,primary_key=True,autoincrement=True)

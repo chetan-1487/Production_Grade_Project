@@ -19,8 +19,10 @@ router=APIRouter(
     tags=['User Information']
 )
 
+# Route to get the download history of a user
 @router.get("/history")
 async def get_download_history(db: Session = Depends(get_db),current_user:int=Depends(auth2.get_current_user)):
+    # Query the DownloadHistory table to fetch all download history for the current user
     history = db.query(DownloadHistory).all()
 
     if not history:
@@ -37,23 +39,7 @@ async def get_download_history(db: Session = Depends(get_db),current_user:int=De
     ]
 
 
-# @router.get("/metadata", response_model=VideoMetadataResponse)
-# def get_video_metadata(url: str = Query(..., description="YouTube video URL"), db: Session = Depends(get_db),current_user:int=Depends(auth2.get_current_user)):
-#     metadata = db.query(VideoMetadata).filter(VideoMetadata.url == url).first()
-
-#     if not metadata:
-#         raise HTTPException(status_code=404, detail="Video metadata not found")
-
-#     return {
-#         "title": metadata.title,
-#         "duration": metadata.duration,
-#         "views": metadata.views,
-#         "likes": metadata.likes,
-#         "channel": metadata.channel,
-#         "thumbnail_url": metadata.thumbnail_url,
-#         "published_date": metadata.published_date
-#     }
-
+# Route to initiate a download request
 @router.post("/download")
 async def download(request: DownloadRequest, db: Session = Depends(get_db),current_user:User=Depends(auth2.get_current_user)):
 
@@ -79,6 +65,7 @@ async def download(request: DownloadRequest, db: Session = Depends(get_db),curre
     task_result = download_video.delay(request.url, request.quality, request.format)
 
     try:
+        # Wait for the Celery task to complete and retrieve the result
         result = task_result.get(timeout=99999999999)
         if not isinstance(result, list):
             result = [result]  # wrap single video result in a list
@@ -89,45 +76,10 @@ async def download(request: DownloadRequest, db: Session = Depends(get_db),curre
     if not result:
         raise HTTPException(status_code=400, detail="Download failed")
     
+    # Initialize a list to hold responses for each downloaded video
     responses=[]
 
-    # if not filepath:
-    #     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Download failed")
-
-    # # Store metadata in DB
-    # metadata = VideoMetadata(**metadata_dict)
-    # metadata.user_id=current_user.id
-    # db.add(metadata)
-    # db.commit()
-    # db.refresh(metadata)
-
-    # # print(current_user)
-
-    # # Store metadata in DownloadHistory
-    # history = DownloadHistory(
-    #     url=request.url,
-    #     video_id=metadata_dict["id"],
-    #     status="Success",
-    #     download_at=datetime.utcnow(),
-    #     download_url=filepath
-    # )
-    # history.user_id=current_user.id
-    # db.add(history)
-    # db.commit()
-    # db.refresh(history)
-
-    # return{
-    #     "Status":"Success",
-    #     "filepath": filepath,
-    #     "title": metadata.title,
-    #     "duration": metadata.duration,
-    #     "views": metadata.views,
-    #     "likes": metadata.likes,
-    #     "channel": metadata.channel,
-    #     "thumbnail_url": metadata.thumbnail_url,
-    #     "published_date": metadata.published_date
-    # }
-
+    # Iterate over the download results (file path and metadata)
     for filepath, metadata_dict in result:
         if not filepath:
             continue
@@ -152,6 +104,7 @@ async def download(request: DownloadRequest, db: Session = Depends(get_db),curre
         db.commit()
         db.refresh(history)
 
+        # Append the result (metadata) to the response list
         responses.append({
             "Status": "Success",
             "filepath": filepath,
