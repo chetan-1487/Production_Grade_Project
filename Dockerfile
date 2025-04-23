@@ -1,20 +1,22 @@
-# Use official Python base image
-FROM python:3.11
-
-# Set working directory
+# Stage 1: Build
+FROM python:3.11-slim AS builder
+RUN apt-get update && apt-get install -y ffmpeg
 WORKDIR /app
 
-# Copy requirements file
 COPY requirements.txt .
+RUN pip install --upgrade pip && pip install --user -r requirements.txt
 
-# Install dependencies
-RUN pip install -r requirements.txt
+# Stage 2: Runtime
+FROM python:3.11-slim
 
-# Copy application files to container
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH=/root/.local/bin:$PATH
+
+WORKDIR /app
+
+COPY --from=builder /root/.local /root/.local
 COPY . .
 
-# Expose the port FastAPI will run on
-EXPOSE 8002
-
-# Command to start FastAPI server
-CMD ["uvicorn", "app.app1:app", "--host", "0.0.0.0", "--port", "8002", "--reload"]
+# Default command runs the API server with Gunicorn
+CMD ["gunicorn", "-c", "app.main:app"]

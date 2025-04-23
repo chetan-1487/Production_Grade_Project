@@ -5,9 +5,7 @@ from uuid import UUID as uuid
 import re
 
 # Regular expression patterns to validate YouTube video and playlist URLs
-YOUTUBE_URL_REGEX = re.compile(
-    r"^(https?://)?(www\.)?(youtube\.com|youtu\.be)/(watch\?v=)?[\w\-]{11}(&[a-zA-Z0-9_]+=[a-zA-Z0-9_&\-]*)*$"
-)
+YOUTUBE_URL_REGEX = re.compile(r"^(https?://)?(www\.)?(youtube\.com|youtu\.be)/(watch\?v=)?[\w\-]{11}(&[a-zA-Z0-9_]+=[a-zA-Z0-9_&\-]*)*$")
 YOUTUBE_PLAYLIST_REGEX = re.compile(r"^(https?://)?(www\.)?youtube\.com/playlist\?list=[\w\-]+")
 
 # Set of allowed formats for downloading
