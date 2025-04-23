@@ -58,8 +58,11 @@ async def download(request: DownloadRequest, db: Session = Depends(get_db),curre
             status_code=403,
             detail="Daily download limit reached. Login with another account or try again tomorrow."
         )
-
-    task_result = download_video.delay(request.url, request.quality, request.format)
+    
+    if request.start_time == None and request.end_time == None:
+        task_result = download_video.delay(request.url, request.quality, request.format)
+    else:
+        task_result = download_video.delay(request.url, request.quality, request.format,request.start_time,request.end_time)
 
     try:
         # Wait for the Celery task to complete and retrieve the result

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, ConfigDict, field_validator
+from pydantic import BaseModel, EmailStr, ConfigDict, field_validator,model_validator,constr
 from datetime import datetime
 from typing import Optional
 from uuid import UUID as uuid
@@ -44,7 +44,20 @@ class DownloadRequest(BaseModel):
     url:str
     format:str
     quality:str
+    start_time: Optional[str]=None
+    end_time: Optional[str]=None
 
+    # Validator to ensure that both start_time and end_time are provided if one is given
+    @field_validator("start_time", "end_time")
+    @classmethod
+    def validate_time_format(cls, value):
+        if value:  # Validate time format only if the value is not None
+            try:
+                datetime.strptime(value, "%H:%M:%S")
+            except ValueError:
+                raise ValueError(f"Invalid time format for {value}. Use HH:MM:SS.")
+        return value
+    
     # Validator for the 'url' field to check if it is a valid YouTube URL
     @field_validator("url")
     @classmethod

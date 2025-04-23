@@ -2,11 +2,12 @@ import os
 import uuid
 from yt_dlp import YoutubeDL
 from datetime import datetime
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Optional
 from app.Core.celery_worker.celery_worker import celery_app
 from celery import shared_task
 from fastapi import HTTPException
 from ...Core.config import MAX_DURATION,MAX_SIZE
+import subprocess
 
 # Mapping of quality labels to video height (used by yt_dlp for filterin
 QUALITY_MAP = {
@@ -25,7 +26,7 @@ os.makedirs(BASE_DOWNLOAD_DIR, exist_ok=True)
 # Define a Celery task for downloading videos (supports individual videos or playlists)
 # @celery_app.task(name="app.Core.Service.download.download_video")
 @shared_task
-def download_video(url: str, quality: str = '1080p', file_format: str = 'mp4') -> list:  #tuple
+def download_video(url: str, quality: str = '1080p', file_format: str = 'mp4', start_time: Optional[str] = None, end_time: Optional[str]=None) -> list:  #tuple
     extension = "mp3" if file_format == "mp3" else file_format
     output_path = os.path.join(BASE_DOWNLOAD_DIR, f"%(id)s.%(ext)s")
     result=[]
@@ -105,6 +106,30 @@ def download_video(url: str, quality: str = '1080p', file_format: str = 'mp4') -
                 entries=[info]
             
             for entry in entries:
+
+                original_id = entry.get("id")
+                original_file_path = os.path.join(BASE_DOWNLOAD_DIR, f"{original_id}.{extension}")
+                final_file_path = original_file_path
+
+                # If trimming requested
+                if start_time and end_time:
+                    trimmed_file_path = os.path.join(BASE_DOWNLOAD_DIR, f"{uuid.uuid4()}.{extension}")
+                    try:
+                        ffmpeg_cmd = [
+                            "ffmpeg", "-y",
+                            "-i", original_file_path,
+                            "-ss", start_time,
+                            "-to", end_time,
+                            "-c", "copy",
+                            trimmed_file_path
+                        ]
+                        subprocess.run(ffmpeg_cmd, check=True)
+                        os.remove(original_file_path)
+                        final_file_path = trimmed_file_path
+                    except Exception as e:
+                        raise RuntimeError(f"Trimming failed: {str(e)}")
+
+
                 video_id = str(uuid.uuid4())
                 file_path = os.path.join(BASE_DOWNLOAD_DIR, f"{video_id}.{extension}")
 

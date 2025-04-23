@@ -14,15 +14,15 @@ if not conn:
 # Extra connections allowed beyond the pool_size
 engine=create_engine(conn,pool_size=10,max_overflow=20)
 
-print(engine.pool)
+# print(engine.pool)
 
-@event.listens_for(engine, "connect")
-def on_connect(dbapi_connection, connection_record):
-    print("New DB connection opened")
+# @event.listens_for(engine, "connect")
+# def on_connect(dbapi_connection, connection_record):
+#     print("New DB connection opened")
 
-@event.listens_for(engine, "checkout")
-def on_checkout(dbapi_connection, connection_record, connection_proxy):
-    print("Reusing DB connection from pool")
+# @event.listens_for(engine, "checkout")
+# def on_checkout(dbapi_connection, connection_record, connection_proxy):
+#     print("Reusing DB connection from pool")
 
 
 # SessionLocal will be used to create session instances for interacting with the database
