@@ -20,8 +20,11 @@ QUALITY_MAP = {
 
 # Save to Desktop/Downloads
 # Set base download directory to the user's Downloads folder
-BASE_DOWNLOAD_DIR = os.path.expanduser("~/Downloads")
+# BASE_DOWNLOAD_DIR = os.path.expanduser("~/Downloads")
+# os.makedirs(BASE_DOWNLOAD_DIR, exist_ok=True)
+BASE_DOWNLOAD_DIR = '/home/chetan/Downloads'  # Host machine Downloads folder
 os.makedirs(BASE_DOWNLOAD_DIR, exist_ok=True)
+
 
 # Define a Celery task for downloading videos (supports individual videos or playlists)
 # @celery_app.task(name="app.Core.Service.download.download_video")
